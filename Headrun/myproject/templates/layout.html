@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        {% block title %}
+            Django App
+        {% endblock %}
+    </title>
+    <link rel="stylesheet" href="{% static 'styles.css' %}">
+</head>
+<body>
+    <nav>
+        {% if not user.is_authenticated %}
+        <a href="/">
+            <span role="img" aria-label="Home" title="Home">🏠</span>
+        </a> 
+        {% else %} 
+        <a href="{% url 'posts:list' %}">
+            <span role="img" aria-label="Posts" title="Posts">📰</span>
+        </a> | 
+        <a href="{% url 'posts:create' %}">
+            <span role="img" aria-label="New Post" title="New Post">🆕</span>
+        </a> | 
+        <form class="logout" action="{% url 'clients:logout' %}" method="post">
+            {% csrf_token %} 
+            <button class="logout-button" aria-label="User Logout" title="User Logout">👋</button>
+        </form>
+        {% endif %}
+    </nav>
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+</body>
+</html>

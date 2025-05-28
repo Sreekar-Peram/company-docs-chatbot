@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Home
+{% endblock %}
+
+{% block content %}
+    <p>
+        for login <a href="{% url 'clients:login' %}">login</a>
+    </p>
+    <p>For registration <a href="{% url 'clients:register' %}">click here</a></p>
+{% endblock %}
+
+
+
+
