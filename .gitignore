@@ -1,8 +1,12 @@
-# Python bytecode
+# ============================
+# BACKEND: Python + Django
+# ============================
+
+# Bytecode
 __pycache__/
 *.py[cod]
 
-# Virtual environment
+# Virtual Environments
 venv/
 ENV/
 env/
@@ -11,17 +15,44 @@ env/
 # Django DB
 db.sqlite3
 
-# FAISS index and embeddings
+# FAISS vector files
 llmapi/index.faiss
 llmapi/chunks.pkl
 
-# Uploaded media (optional to ignore)
+# Uploaded media (if not needed in repo)
 media/
-
-# OS and editor junk
-.DS_Store
-Thumbs.db
-.vscode/
 
 # Static files (optional if generated)
 staticfiles/
+
+# ============================
+#  FRONTEND: React (inside /myproject/frontend)
+# ============================
+
+# Node modules and build
+myproject/frontend/node_modules/
+myproject/frontend/build/
+
+# Frontend environment files
+myproject/frontend/.env
+myproject/frontend/.env.local
+myproject/frontend/.env.development.local
+myproject/frontend/.env.test.local
+myproject/frontend/.env.production.local
+
+# Frontend test + debug logs
+myproject/frontend/coverage/
+myproject/frontend/npm-debug.log*
+myproject/frontend/yarn-debug.log*
+myproject/frontend/yarn-error.log*
+
+# ============================
+#  OS / Editor / Misc
+# ============================
+
+# macOS / Windows
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
