@@ -1,0 +1,21 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+    Posts
+{% endblock %}
+
+{% block content %}
+    <section>
+    <h1>Posts</h1>
+    {% for post in posts %}
+        <article class="post">
+            <h2>
+                <a href="{%  url 'posts:view' slug=post.slug %}">
+                    {{ post.name }}
+                </a>
+            </h2>
+            <p>{{ post.date }} by {{ post.author }}</p>
+        </article>
+    {% endfor %}
+</section>
+{% endblock %}
