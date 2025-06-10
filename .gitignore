@@ -1,0 +1,27 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+venv/
+ENV/
+env/
+*.egg-info/
+
+# Django DB
+db.sqlite3
+
+# FAISS index and embeddings
+llmapi/index.faiss
+llmapi/chunks.pkl
+
+# Uploaded media (optional to ignore)
+media/
+
+# OS and editor junk
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Static files (optional if generated)
+staticfiles/
