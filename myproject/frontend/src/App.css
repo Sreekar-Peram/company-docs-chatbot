@@ -1,0 +1,48 @@
+.App {
+  text-align: center;
+}
+
+.website-content {
+  padding: 32px;
+}
+
+.website-title {
+  font-size: 32px;
+  color: #0a2540;
+  margin-bottom: 16px;
+}
+
+.website-description {
+  color: #666;
+  font-size: 16px;
+}
+
+/* Animation for floating chatbot icon */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.chatbot-icon {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Message animations */
+.message-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.message-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+/* Responsive design */
+@media (min-width: 768px) {
+  .chat-interface {
+    width: 50%;
+  }
+}

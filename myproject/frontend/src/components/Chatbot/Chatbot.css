@@ -1,0 +1,354 @@
+
+/* Update the chatbot icon styles */
+.chatbot-icon {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%);
+  border-radius: 50%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+.chatbot-icon:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+}
+
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+}
+
+.typing-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #00d4ff;
+  border-radius: 50%;
+  margin: 0 2px;
+  animation: bounce 1s infinite ease-in-out;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.message-container {
+  display: flex;
+  margin-bottom: 16px;
+}
+
+.bot-message {
+  justify-content: flex-start;
+}
+
+.user-message {
+  justify-content: flex-end;
+}
+
+.message-bubble {
+  max-width: 70%;
+  padding: 12px 16px;
+  border-radius: 18px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.bot-bubble {
+  background-color: #f1f1f1;
+  color: #333;
+  border-bottom-left-radius: 4px;
+}
+
+.user-bubble {
+  background-color: #0a2540;
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.typing-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.bot-avatar {
+  width: 24px;
+  height: 24px;
+  background-color: #7e5bef;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.typing-text {
+  font-size: 12px;
+  color: #666;
+}
+
+.chat-interface-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.chat-interface {
+  width: 100%;
+  height: 100%;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+}
+
+.chat-header {
+  background-color: #0a2540;
+  color: white;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chat-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.close-button:hover {
+  color: #00d4ff;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  background-color: #f8f9fa;
+}
+
+.welcome-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  padding: 16px;
+}
+
+.welcome-title {
+  color: #0a2540;
+  font-size: 24px;
+  font-weight: bold;
+  margin-top: 16px;
+  margin-bottom: 8px;
+}
+
+.welcome-text {
+  color: #666;
+  margin-bottom: 24px;
+  max-width: 400px;
+}
+
+.get-started-button {
+  background: #0a2540;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 16px;
+  box-shadow: 0 4px 12px rgba(10, 37, 64, 0.3);
+  transition: all 0.3s;
+}
+
+.get-started-button:hover {
+  background: #0d3255;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(10, 37, 64, 0.4);
+}
+
+.typing-message {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.typing-avatar {
+  width: 32px;
+  height: 32px;
+  background-color: #7e5bef;
+  border-radius: 50%;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.typing-bubble {
+  background-color: #f1f1f1;
+  padding: 8px 12px;
+  border-radius: 18px;
+  border-bottom-left-radius: 4px;
+}
+
+.chat-input-container {
+  padding: 16px;
+  border-top: 1px solid #e0e0e0;
+  background-color: white;
+  display: flex;
+  align-items: center;
+}
+
+.chat-input {
+  flex: 1;
+  border: 1px solid #ddd;
+  border-radius: 24px;
+  padding: 12px 16px;
+  font-size: 14px;
+  outline: none;
+}
+
+.chat-input:focus {
+  border-color: #00d4ff;
+  box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.2);
+}
+
+.send-button {
+  background-color: #0a2540;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  margin-left: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s;
+}
+
+.send-button:hover {
+  background-color: #7e5bef;
+}
+
+.send-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Scrollbar styles */
+.chat-messages::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Peeking Avatar Styles */
+.peeking-avatar {
+  width: 28px;
+  height: 28px;
+  background-color: #7e5bef;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-right: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Typing Container */
+.typing-container {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+}
+
+/* Typing Dots Container */
+.typing-dots {
+  display: flex;
+  align-items: center;
+  background-color: #f1f1f1;
+  padding: 8px 12px;
+  border-radius: 18px;
+  border-bottom-left-radius: 4px;
+}
+
+/* Individual Typing Dots */
+.typing-dot {
+  width: 6px;
+  height: 6px;
+  background-color: #666;
+  border-radius: 50%;
+  margin: 0 2px;
+}
+
+/* Animation for the entire typing bubble */
+@keyframes peek {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.typing-message {
+  animation: peek 2s infinite ease-in-out;
+}
+
+/* Typing Message Container */
+.typing-message-container {
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: 16px;
+}
+
+.typing-message {
+  display: flex;
+  align-items: center;
+  background-color: #f1f1f1;
+  padding: 4px 12px 4px 4px;
+  border-radius: 18px;
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Avatar peeking animation */
+@keyframes avatarPeek {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.peeking-avatar {
+  animation: avatarPeek 1.5s infinite ease-in-out;
+}
