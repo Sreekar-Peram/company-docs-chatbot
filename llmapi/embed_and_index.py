@@ -2,7 +2,23 @@ import os
 import pickle
 import faiss
 import fitz  # PyMuPDF
+import camelot
 from sentence_transformers import SentenceTransformer
+
+def extract_tables_from_pdf(filepath):
+    try:
+        tables = camelot.read_pdf(filepath, pages='all', flavor='lattice')  # Try 'stream' if this fails
+        if tables:
+            all_tables_text = []
+            for table in tables:
+                table_text = table.df.to_string(index=False, header=False)
+                all_tables_text.append(table_text)
+            return "\n\n[Extracted Tables]\n" + "\n\n".join(all_tables_text)
+        else:
+            return ""
+    except Exception as e:
+        print(f"[WARN] Table extraction failed for {filepath}: {e}")
+        return ""
 
 def load_pdfs(folder_path, skip_files=None):
     skip_files = skip_files or []
@@ -10,13 +26,21 @@ def load_pdfs(folder_path, skip_files=None):
     for file in os.listdir(folder_path):
         if file.endswith(".pdf") and file not in skip_files:
             print(f"[INFO] Loading: {file}")
-            doc = fitz.open(os.path.join(folder_path, file))
+            filepath = os.path.join(folder_path, file)
+
+            # Extract text using PyMuPDF
+            doc = fitz.open(filepath)
             full_text = "\n".join([page.get_text() for page in doc])
-            texts.append((file, full_text))
+
+            # Extract tables using Camelot
+            table_text = extract_tables_from_pdf(filepath)
+
+            # Append table content to main text
+            combined_text = full_text + "\n\n" + table_text
+            texts.append((file, combined_text))
     return texts
 
 def chunk_text(text, chunk_size=500):
-    # Simple paragraph-based chunking
     paragraphs = [p.strip() for p in text.split('\n') if p.strip()]
     chunks = []
     current_chunk = ""
@@ -37,7 +61,7 @@ def build_index_incremental(documents_folder):
     print(f"[START] Building FAISS index from folder: {documents_folder}")
     model = SentenceTransformer('all-MiniLM-L6-v2')
 
-    # Load existing index & metadata if they exist
+    # Load existing index & metadata if available
     if os.path.exists("llmapi/index.faiss") and os.path.exists("llmapi/chunks.pkl"):
         print("[INFO] Loading existing FAISS index and metadata...")
         index = faiss.read_index("llmapi/index.faiss")
@@ -51,7 +75,7 @@ def build_index_incremental(documents_folder):
         metadata = []
         indexed_files = set()
 
-    # Load only new PDFs, skip already indexed files
+    # Load new PDFs
     texts = load_pdfs(documents_folder, skip_files=indexed_files)
     if not texts:
         print("[INFO] No new documents to index.")
@@ -62,10 +86,15 @@ def build_index_incremental(documents_folder):
 
     for filename, text in texts:
         print(f"[INFO] Processing file: {filename}")
+        contains_table = "[Extracted Tables]" in text
         chunks = chunk_text(text)
         for chunk in chunks:
             all_chunks.append(chunk)
-            new_metadata.append({"source": filename, "text": chunk})
+            new_metadata.append({
+                "source": filename,
+                "text": chunk,
+                "contains_table": contains_table
+            })
 
     print(f"[INFO] Embedding {len(all_chunks)} new chunks...")
     embeddings = model.encode(all_chunks, show_progress_bar=True)
