@@ -13,38 +13,30 @@ from django.views.decorators.http import require_http_methods
 from sentence_transformers import SentenceTransformer
 import faiss
 
-from posts.models import Post
+from posts.models import Post, Client
 from llmapi.embed_and_index import build_index_incremental
 
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from clients.models import Company
 
 # Constants
-UPLOAD_DIR = os.path.join(settings.MEDIA_ROOT, 'pdfs')
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+UPLOAD_BASE_DIR = os.path.join(settings.MEDIA_ROOT, 'pdfs')
+INDEX_BASE_DIR = os.path.join(settings.MEDIA_ROOT, 'faiss_indexes')
+os.makedirs(UPLOAD_BASE_DIR, exist_ok=True)
 
-INDEX_PATH = "llmapi/index.faiss"
-CHUNKS_PATH = "llmapi/chunks.pkl"
 EMBED_MODEL_NAME = "all-MiniLM-L6-v2"
 TOP_K = 5
-
-# Load embedding model and index at startup
 embedding_model = SentenceTransformer(EMBED_MODEL_NAME)
 
-if os.path.exists(INDEX_PATH):
-    index = faiss.read_index(INDEX_PATH)
-else:
-    index = faiss.IndexFlatL2(384)
 
-if os.path.exists(CHUNKS_PATH):
-    with open(CHUNKS_PATH, "rb") as f:
-        chunk_metadata = pickle.load(f)
-else:
-    chunk_metadata = []
+@login_required
+def upload_test_view(request):
+    companies = Company.objects.all()
+    return render(request, 'upload_test.html', {'companies': companies})
 
 
 def ask_llama_with_context(question, context):
-    """
-    Run LLaMA 3.2 via Ollama with context-enhanced prompt.
-    """
     prompt = f"""
 You are an assistant that only answers questions using the given context from company documents.
 
@@ -74,81 +66,78 @@ If the answer is not in the context, respond with:
         return f"[Error: {str(e)}]"
 
 
-def get_top_chunks(query, top_k=TOP_K):
-    """
-    Search FAISS for top K relevant chunks for a given query.
-    """
-    query_vector = embedding_model.encode([query])
-    query_vector = np.array(query_vector).astype("float32")
-    D, I = index.search(query_vector, top_k)
-    chunks = []
-
-    for dist, i in zip(D[0], I[0]):
-        if i < len(chunk_metadata):
-            chunk_text = chunk_metadata[i]["text"]
-            source = chunk_metadata[i]["source"]
-            chunks.append(chunk_text)
-
-    return chunks
-
-
 @csrf_exempt
 @require_http_methods(["POST"])
 def upload_documents(request):
-    """
-    Accept PDF uploads, save them as Post objects, and re-index all documents in media/pdfs.
-    """
     uploaded_files = request.FILES.getlist('documents')
-    saved_files = []
+    company_name = request.POST.get('company_name')
+    client_name = request.POST.get('client_name')
 
-    if not uploaded_files:
-        return JsonResponse({'error': 'No files uploaded.'}, status=400)
-
-    # For demonstration, assign request.user as author. Adjust if needed.
-    author = request.user if request.user.is_authenticated else None
-
-    for file in uploaded_files:
-        # Save via Post model, which stores files to media/pdfs/
-        post = Post(name=file.name, author=author)
-        post.any_file.save(file.name, file)
-        post.save()
-        saved_files.append(post.any_file.path)  # Full path on disk
+    if not uploaded_files or not company_name or not client_name:
+        return JsonResponse({'error': 'Company name, client name, and documents are required.'}, status=400)
 
     try:
-        # Rebuild index on all files in media/pdfs folder
-        build_index_incremental(UPLOAD_DIR)
+        company = Company.objects.get(name=company_name)
+        client = Client.objects.get(name=client_name, company=company)
+    except (Company.DoesNotExist, Client.DoesNotExist):
+        return JsonResponse({'error': 'Client or Company not identified. Please contact support.'}, status=404)
 
-        return JsonResponse({
-            'message': 'Files uploaded and indexed successfully.',
-            'files': [os.path.basename(f) for f in saved_files]
-        })
+    client_upload_dir = os.path.join(UPLOAD_BASE_DIR, company.name, client.name)
+    os.makedirs(client_upload_dir, exist_ok=True)
+
+    saved_files = []
+    for file in uploaded_files:
+        post = Post(name=file.name, client=client)
+        post.any_file.save(os.path.join(client.name, file.name), file)
+        post.save()
+        saved_files.append(post.any_file.path)
+
+    try:
+        build_index_incremental(client_upload_dir, company.name, client.name)
+        return JsonResponse({'message': 'Files uploaded and indexed successfully.', 'files': [os.path.basename(f) for f in saved_files]})
     except Exception as e:
-        return JsonResponse({'error': f'Indexing failed: {str(e)}'}, status=500)
+        return JsonResponse({'error': str(e)}, status=500)
+
 
 
 @csrf_exempt
 @require_http_methods(["POST"])
 def query_llama(request):
-    """
-    Accept a question, retrieve relevant context, and respond using LLaMA.
-    """
     try:
-        if request.content_type == 'application/json':
-            data = json.loads(request.body)
-            question = data.get('question', '').strip()
-        else:
-            question = request.POST.get('question', '').strip()
-    except Exception:
-        return JsonResponse({'error': 'Invalid input.'}, status=400)
+        data = json.loads(request.body)
+        question = data.get('question', '').strip()
+        company_name = data.get('company_name', '').strip()
+        client_name = data.get('client_name', '').strip()
+    except:
+        return JsonResponse({'error': 'Invalid JSON format or missing fields.'}, status=400)
 
-    if not question:
-        return JsonResponse({'error': 'Question is required.'}, status=400)
+    if not question or not company_name or not client_name:
+        return JsonResponse({'error': 'Question, company name, and client name are required.'}, status=400)
 
-    top_chunks = get_top_chunks(question, TOP_K)
-    if not top_chunks:
-        return JsonResponse({'answer': 'No document content indexed yet.'})
+    try:
+        company = Company.objects.get(name=company_name)
+        client = Client.objects.get(name=client_name, company=company)
+    except (Company.DoesNotExist, Client.DoesNotExist):
+        return JsonResponse({'error': 'Client or Company not identified. Please contact support.'}, status=404)
 
-    context = "\n\n".join(top_chunks)
-    answer = ask_llama_with_context(question, context)
+    index_dir = os.path.join(INDEX_BASE_DIR, company.name, client.name)
+    index_path = os.path.join(index_dir, "index.faiss")
+    metadata_path = os.path.join(index_dir, "metadata.pkl")
 
-    return JsonResponse({'answer': answer})
+    if not os.path.exists(index_path) or not os.path.exists(metadata_path):
+        return JsonResponse({'error': 'Index or metadata not found for this client.'}, status=404)
+
+    try:
+        index = faiss.read_index(index_path)
+        with open(metadata_path, "rb") as f:
+            metadata = pickle.load(f)
+
+        question_embedding = embedding_model.encode([question])
+        distances, indices = index.search(np.array(question_embedding), TOP_K)
+
+        context_chunks = [metadata[idx]["text"] for idx in indices[0] if idx < len(metadata)]
+        context = "\n\n".join(context_chunks)
+        answer = ask_llama_with_context(question, context)
+        return JsonResponse({'answer': answer})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

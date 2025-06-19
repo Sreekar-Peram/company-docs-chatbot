@@ -29,6 +29,8 @@ urlpatterns = [
     path('posts/', include('posts.urls')),
     path('clients/', include('clients.urls')),
     path('query_with_retrieval/',query_with_retrieval, name='query_with_retrieval'),
+    path('api/', include('llmapi.urls')), 
+   
 
 ]
 if settings.DEBUG:

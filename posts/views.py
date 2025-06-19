@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect
 from .models import Post
 from django.contrib.auth.decorators import login_required
 from . import forms
+from django.shortcuts import render
+from clients.models import Company ,Client
 # Create your views here.
 
 """
@@ -28,6 +30,17 @@ def posts_create_view(request):
     else:
         form = forms.CreatePost()
     return render(request, 'posts/posts_create.html', { 'form': form })
+def upload_view(request):
+    companies = Company.objects.all()
+    company_client_map = {}
 
+    for company in companies:
+        clients = Client.objects.filter(company=company).values_list('name', flat=True)
+        company_client_map[company.name] = list(clients)
+
+    return render(request, 'llmapi/upload_test.html', {
+        'companies': companies,
+        'company_client_map': company_client_map
+    })
 
 

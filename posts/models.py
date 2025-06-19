@@ -2,15 +2,19 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils.text import slugify
 from django.utils import timezone
+from clients.models import Client
 
-# Create your models here.
 class Post(models.Model):
     name = models.CharField(max_length=75)
     author = models.ForeignKey(User, on_delete=models.CASCADE, default=None)
-    any_file = models.FileField(upload_to='pdfs/', default=None, blank= True)
+
+    # ✅ TEMP FIX: Make client field optional for initial migration
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, null=True, blank=True)
+
+    any_file = models.FileField(upload_to='pdfs/', default=None, blank=True)
     date = models.DateTimeField(default=timezone.now)
     slug = models.SlugField(unique=True, blank=True)
-    # client_id = models.ForeignKey()
+
     def save(self, *args, **kwargs):
         if not self.slug:
             base_slug = slugify(self.name)
@@ -21,11 +25,6 @@ class Post(models.Model):
                 counter += 1
             self.slug = slug
         super().save(*args, **kwargs)
+
     def __str__(self):
-        return self.name
-    """
-    media --> file path for each post
-    client_id --> as a foreign key
-    pk is automatically created
-    """
-    
+        return f"{self.name} ({self.client.name if self.client else 'No Client'})"

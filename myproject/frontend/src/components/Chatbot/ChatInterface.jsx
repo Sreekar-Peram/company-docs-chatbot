@@ -12,22 +12,59 @@ const ChatInterface = ({ onClose, hideWidget }) => {
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
+  const [companyName, setCompanyName] = useState('');
+  const [clientName, setClientName] = useState('');
+
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
     hideWidget();
-  }, [hideWidget]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+    
+  const injectedCompany = window.COMPANY_NAME || '';
+  const injectedClient = window.CLIENT_NAME || '';
+  console.log("Injected company:", injectedCompany);
+  console.log("Injected client (window):", injectedClient);
+
+  setCompanyName(injectedCompany);
+
+  if (injectedClient) {
+    setClientName(injectedClient);
+    localStorage.setItem("clientName", injectedClient);
+  } else if (injectedCompany) {
+   fetch(`http://localhost:8000/clients/api/clients/${injectedCompany}/`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.clients && data.clients.length > 0) {
+          const firstClient = data.clients[0];
+          console.log("Fetched client:", firstClient);
+          setClientName(firstClient);
+          localStorage.setItem("clientName", firstClient);
+        } else {
+          console.warn("No clients found.");
+        }
+      })
+      .catch(err => {
+        console.error("Error fetching client:", err);
+      });
+  }
+}, [hideWidget]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   const handleSendMessage = () => {
     if (inputValue.trim() === '') return;
+
+    if (!companyName || !clientName) {
+      alert("Client or Company not identified. Please contact support.");
+      return;
+    }
 
     const userMessage = {
       text: inputValue,
@@ -38,17 +75,18 @@ const ChatInterface = ({ onClose, hideWidget }) => {
     setInputValue('');
     setIsTyping(true);
 
-    //  backend URL
-     fetch('http://127.0.0.1:8000/query_with_retrieval/',{
+    fetch('http://127.0.0.1:8000/query_with_retrieval/', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ question: userMessage.text }),
+      body: JSON.stringify({
+        question: userMessage.text,
+        company_name: companyName,
+        client_name: clientName,
+      }),
     })
       .then(response => {
-        if (!response.ok) throw new Error('Network response was not ok');
+        if (!response.ok) throw new Error('Network error');
         return response.json();
       })
       .then(data => {
@@ -60,7 +98,7 @@ const ChatInterface = ({ onClose, hideWidget }) => {
           },
         ]);
       })
-      .catch(error => {
+      .catch(() => {
         setMessages(prev => [
           ...prev,
           {
@@ -68,7 +106,6 @@ const ChatInterface = ({ onClose, hideWidget }) => {
             isBot: true,
           },
         ]);
-        console.error('Error:', error);
       })
       .finally(() => {
         setIsTyping(false);
@@ -117,8 +154,7 @@ const ChatInterface = ({ onClose, hideWidget }) => {
               />
               <h3 className="welcome-title">Hello! I'm your Company ChatBot</h3>
               <p className="welcome-text">
-                I can help answer any questions you have about our company, products, or services. 
-                Whether you need information about our team, pricing, or features, I'm here to assist!
+                I can help answer any questions you have about our company, products, or services.
               </p>
               <button
                 onClick={handleGetStarted}
@@ -130,15 +166,9 @@ const ChatInterface = ({ onClose, hideWidget }) => {
           ) : (
             <>
               {messages.map((message, index) => (
-                <Message
-                  key={index}
-                  message={message.text}
-                  isBot={message.isBot}
-                />
+                <Message key={index} message={message.text} isBot={message.isBot} />
               ))}
-              {isTyping && (
-                <TypingIndicator />
-              )}
+              {isTyping && <TypingIndicator />}
               <div ref={messagesEndRef} />
             </>
           )}

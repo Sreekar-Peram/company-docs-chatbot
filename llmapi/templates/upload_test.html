@@ -1,0 +1,21 @@
+<form action="/api/upload-documents/" method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+
+  <!-- Company Dropdown (still visible if multiple companies exist) -->
+  <label for="company">Select Company:</label>
+  <select name="company_name" id="company" required>
+    <option value="">-- Choose Company --</option>
+    {% for company in companies %}
+      <option value="{{ company.name }}">{{ company.name }}</option>
+    {% endfor %}
+  </select><br><br>
+
+  <!-- Hidden Client Name Field -->
+  <input type="hidden" name="client_name" value="Client1_TechService">
+
+  <!-- PDF Upload -->
+  <label>Select PDF(s):</label>
+  <input type="file" name="documents" multiple required><br><br>
+
+  <button type="submit">Upload</button>
+</form>
